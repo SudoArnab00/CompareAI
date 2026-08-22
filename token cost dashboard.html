@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Token Cost Dashboard</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --card:#ffffff; --border:#e2e2df; --text:#1a1a1a;
+    --muted:#6b6b68; --accent:#2f6f4f;
+    --work-bg:#eaf1fb; --work-border:#b9cfee;
+    --casual-bg:#fdf3e7; --casual-border:#eecfa0;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    margin:0; padding:16px; max-width:960px; margin-inline:auto;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  h1{font-size:17px; margin:0 0 4px;}
+  h2{font-size:14px; margin:0 0 4px;}
+  p.sub{color:var(--muted); font-size:12.5px; margin:0 0 18px;}
+  textarea{
+    width:100%; min-height:100px; padding:10px; border:1px solid var(--border);
+    border-radius:8px; font-size:16px; font-family:inherit; resize:vertical; background:var(--card);
+  }
+  label{font-size:12px; color:var(--muted); display:block; margin:14px 0 4px; font-weight:600;}
+  .stats{display:flex; gap:16px; margin-top:10px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
+  .stats b{color:var(--text);}
+
+  .toggle-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  .toggle-btn{
+    flex:1; min-width:110px; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;
+  }
+  .toggle-btn.active.work{background:var(--work-bg); border-color:var(--work-border); color:var(--text);}
+  .toggle-btn.active.casual{background:var(--casual-bg); border-color:var(--casual-border); color:var(--text);}
+  .add-btn{
+    padding:10px 16px; border-radius:8px; border:none; background:var(--accent); color:#fff;
+    font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .add-btn:active{opacity:.85;}
+
+  .table-wrap{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:16px; border:1px solid var(--border); border-radius:8px;}
+  table{width:100%; min-width:560px; border-collapse:collapse; font-size:13px;}
+  th,td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap;}
+  th{color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; background:var(--card); position:sticky; top:0;}
+  td.cost{font-variant-numeric:tabular-nums; font-weight:600;}
+  .cheapest{color:var(--accent);}
+  .platform{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;}
+  .rate{color:var(--muted); font-size:11px;}
+
+  tr.work{ background:var(--work-bg); }
+  tr.casual{ background:var(--casual-bg); }
+  tr.work td:first-child{ border-left:3px solid var(--work-border); }
+  tr.casual td:first-child{ border-left:3px solid var(--casual-border); }
+
+  .section{margin-top:28px; padding-top:16px; border-top:1px solid var(--border);}
+  .log-controls{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .log-controls button{
+    padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card);
+    font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer;
+  }
+  .log-controls button.danger{color:#a33; border-color:#e6bcbc;}
+  .entry-count{font-size:12px; color:var(--muted); margin-top:8px;}
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap; margin-top:24px; padding-top:14px;
+    border-top:1px solid var(--border); font-size:12px; color:var(--muted);
+  }
+  .legend-item{display:flex; align-items:center; gap:7px;}
+  .swatch{width:14px; height:14px; border-radius:3px; display:inline-block; flex-shrink:0;}
+  .swatch.work{background:var(--work-bg); border:1px solid var(--work-border);}
+  .swatch.casual{background:var(--casual-bg); border:1px solid var(--casual-border);}
+
+  @media (max-width:480px){
+    body{padding:12px;}
+    h1{font-size:16px;}
+    th,td{padding:8px 8px; font-size:12px;}
+    .stats{gap:10px; font-size:12px;}
+    .toggle-btn{min-width:90px;}
+  }
+</style>
+</head>
+<body>
+
+<h1>Token Cost Dashboard</h1>
+<p class="sub">Paste a prompt, tag it work or casual, add it to the log. Totals accumulate all week — export CSV anytime.</p>
+
+<label for="inp">Input</label>
+<textarea id="inp" placeholder="Paste your prompt(s) here..."></textarea>
+
+<label for="out">Output</label>
+<textarea id="out" placeholder="Paste the model's response here..."></textarea>
+
+<div class="stats">
+  <span>Input tokens: <b id="inTok">0</b></span>
+  <span>Output tokens: <b id="outTok">0</b></span>
+</div>
+
+<div class="toggle-row">
+  <button class="toggle-btn active work" id="btnWork" onclick="setType('work')">Work</button>
+  <button class="toggle-btn casual" id="btnCasual" onclick="setType('casual')">Casual</button>
+  <button class="add-btn" onclick="addEntry()">Add to log</button>
+</div>
+
+<div class="section">
+  <h2>This entry — projected cost by model</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Platform</th><th>Rate ($/1M in / out)</th><th>Est. Cost (USD)</th><th>Est. Cost (₹)</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Week-to-date totals</h2>
+  <p class="sub" style="margin-top:4px;">Work entries only add to work-tier model totals. Casual entries only add to casual-tier model totals.</p>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Platform</th><th>Type</th><th>Tokens (in/out)</th><th>Total (USD)</th><th>Total (₹)</th></tr>
+    </thead>
+    <tbody id="totalRows"></tbody>
+  </table>
+  </div>
+  <div class="entry-count" id="entryCount">0 entries logged</div>
+  <div class="log-controls">
+    <button onclick="downloadCSV()">Download CSV</button>
+    <button class="danger" onclick="clearLog()">Clear log</button>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="swatch work"></span> Work — DFIR / IR reasoning, judgment-heavy tasks</div>
+  <div class="legend-item"><span class="swatch casual"></span> Casual — general prompting, low-stakes, high-volume</div>
+</div>
+
+<script>
+const USD_INR = 88; // approx conversion, adjust if needed
+const STORAGE_KEY = "tokenCostLog";
+
+const models = [
+  { name: "Llama 3.3 70B",     platform: "Groq",       in: 0.59, out: 0.79,  type: "work" },
+  { name: "Kimi K2",           platform: "Groq",       in: 1.00, out: 3.00,  type: "work" },
+  { name: "Llama 3.1 8B",      platform: "Groq",       in: 0.05, out: 0.08,  type: "casual" },
+
+  { name: "Claude Sonnet 4.6", platform: "OpenRouter", in: 3.00, out: 15.00, type: "work" },
+  { name: "DeepSeek V3.2",     platform: "OpenRouter", in: 0.28, out: 0.42,  type: "work" },
+  { name: "Gemini 3 Flash",    platform: "OpenRouter", in: 0.50, out: 3.00,  type: "casual" },
+
+  { name: "Claude Sonnet 5",   platform: "ChatboxAI",  in: 2.00, out: 10.00, type: "work" },
+  { name: "GPT 5.6 Luna",      platform: "ChatboxAI",  in: 0.20, out: 1.20,  type: "work" },
+  { name: "Chatbox AI 3.5",    platform: "ChatboxAI",  in: 0.30, out: 1.20,  type: "casual" },
+];
+
+let currentType = "work";
+
+function estimateTokens(text){
+  return Math.ceil(text.trim().length / 4);
+}
+
+function setType(t){
+  currentType = t;
+  document.getElementById('btnWork').classList.toggle('active', t==='work');
+  document.getElementById('btnCasual').classList.toggle('active', t==='casual');
+}
+
+function loadLog(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveLog(log){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+}
+
+function renderCurrent(){
+  const inTokens = estimateTokens(document.getElementById('inp').value);
+  const outTokens = estimateTokens(document.getElementById('out').value);
+  document.getElementById('inTok').textContent = inTokens.toLocaleString();
+  document.getElementById('outTok').textContent = outTokens.toLocaleString();
+
+  const costs = models.map(m => {
+    const usd = (inTokens/1e6)*m.in + (outTokens/1e6)*m.out;
+    return { ...m, usd };
+  });
+  const minUsd = Math.min(...costs.map(c => c.usd));
+
+  document.getElementById('rows').innerHTML = costs
+    .sort((a,b) => a.usd - b.usd)
+    .map(c => `
+      <tr class="${c.type}">
+        <td>${c.name}</td>
+        <td class="platform">${c.platform}</td>
+        <td class="rate">$${c.in.toFixed(2)} / $${c.out.toFixed(2)}</td>
+        <td class="cost ${c.usd === minUsd ? 'cheapest' : ''}">$${c.usd.toFixed(4)}</td>
+        <td class="cost ${c.usd === minUsd ? 'cheapest' : ''}">₹${(c.usd*USD_INR).toFixed(2)}</td>
+      </tr>
+    `).join('');
+}
+
+function renderTotals(){
+  const log = loadLog();
+  document.getElementById('entryCount').textContent = `${log.length} entr${log.length===1?'y':'ies'} logged`;
+
+  const totals = models.map(m => {
+    let inSum = 0, outSum = 0;
+    log.forEach(e => {
+      if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; }
+    });
+    const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
+    return { ...m, inSum, outSum, usd };
+  });
+
+  document.getElementById('totalRows').innerHTML = totals
+    .sort((a,b)=> a.type === b.type ? a.usd - b.usd : (a.type==='work' ? -1 : 1))
+    .map(t => `
+      <tr class="${t.type}">
+        <td>${t.name}</td>
+        <td class="platform">${t.platform}</td>
+        <td class="platform">${t.type}</td>
+        <td class="rate">${t.inSum.toLocaleString()} / ${t.outSum.toLocaleString()}</td>
+        <td class="cost">$${t.usd.toFixed(4)}</td>
+        <td class="cost">₹${(t.usd*USD_INR).toFixed(2)}</td>
+      </tr>
+    `).join('');
+}
+
+function addEntry(){
+  const inTokens = estimateTokens(document.getElementById('inp').value);
+  const outTokens = estimateTokens(document.getElementById('out').value);
+  if (inTokens === 0 && outTokens === 0) return;
+
+  const log = loadLog();
+  log.push({
+    timestamp: new Date().toISOString(),
+    type: currentType,
+    inTokens,
+    outTokens
+  });
+  saveLog(log);
+
+  document.getElementById('inp').value = "";
+  document.getElementById('out').value = "";
+  renderCurrent();
+  renderTotals();
+}
+
+function clearLog(){
+  if (!confirm("Clear the entire weekly log? This can't be undone.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderTotals();
+}
+
+function downloadCSV(){
+  const log = loadLog();
+  if (log.length === 0){ alert("No entries logged yet."); return; }
+
+  let rows = [["timestamp","type","input_tokens","output_tokens"]];
+  log.forEach(e => rows.push([e.timestamp, e.type, e.inTokens, e.outTokens]));
+
+  rows.push([]);
+  rows.push(["--- model totals ---"]);
+  rows.push(["model","platform","type","input_tokens","output_tokens","cost_usd","cost_inr"]);
+  models.forEach(m => {
+    let inSum = 0, outSum = 0;
+    log.forEach(e => { if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; } });
+    const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
+    rows.push([m.name, m.platform, m.type, inSum, outSum, usd.toFixed(4), (usd*USD_INR).toFixed(2)]);
+  });
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `token_cost_log_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('inp').addEventListener('input', renderCurrent);
+document.getElementById('out').addEventListener('input', renderCurrent);
+renderCurrent();
+renderTotals();
+</script>
+
+</body>
+</html>
