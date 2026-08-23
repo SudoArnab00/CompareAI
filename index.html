@@ -21,6 +21,18 @@
   h1{font-size:17px; margin:0 0 4px;}
   h2{font-size:14px; margin:0 0 4px;}
   p.sub{color:var(--muted); font-size:12.5px; margin:0 0 18px;}
+
+  .summary{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
+  .summary-card{
+    flex:1; min-width:150px; border-radius:10px; padding:14px; border:1px solid;
+  }
+  .summary-card.work{background:var(--work-bg); border-color:var(--work-border);}
+  .summary-card.casual{background:var(--casual-bg); border-color:var(--casual-border);}
+  .summary-label{font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700; margin-bottom:4px;}
+  .summary-model{font-size:12px; color:var(--muted); margin-bottom:6px;}
+  .summary-cost{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .summary-cost-inr{font-size:13px; color:var(--muted); margin-top:2px;}
+
   textarea{
     width:100%; min-height:100px; padding:10px; border:1px solid var(--border);
     border-radius:8px; font-size:16px; font-family:inherit; resize:vertical; background:var(--card);
@@ -80,6 +92,7 @@
     th,td{padding:8px 8px; font-size:12px;}
     .stats{gap:10px; font-size:12px;}
     .toggle-btn{min-width:90px;}
+    .summary-cost{font-size:19px;}
   }
 </style>
 </head>
@@ -87,6 +100,21 @@
 
 <h1>Token Cost Dashboard</h1>
 <p class="sub">Paste a prompt, tag it work or casual, add it to the log. Totals accumulate all week — export CSV anytime.</p>
+
+<div class="summary">
+  <div class="summary-card work">
+    <div class="summary-label">Work — cheapest so far</div>
+    <div class="summary-model" id="workCheapestName">—</div>
+    <div class="summary-cost" id="workCheapestUsd">$0.0000</div>
+    <div class="summary-cost-inr" id="workCheapestInr">₹0.00</div>
+  </div>
+  <div class="summary-card casual">
+    <div class="summary-label">Casual — cheapest so far</div>
+    <div class="summary-model" id="casualCheapestName">—</div>
+    <div class="summary-cost" id="casualCheapestUsd">$0.0000</div>
+    <div class="summary-cost-inr" id="casualCheapestInr">₹0.00</div>
+  </div>
+</div>
 
 <label for="inp">Input</label>
 <textarea id="inp" placeholder="Paste your prompt(s) here..."></textarea>
@@ -106,24 +134,12 @@
 </div>
 
 <div class="section">
-  <h2>This entry — projected cost by model</h2>
-  <div class="table-wrap">
-  <table>
-    <thead>
-      <tr><th>Model</th><th>Platform</th><th>Rate ($/1M in / out)</th><th>Est. Cost (USD)</th><th>Est. Cost (₹)</th></tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
-  </div>
-</div>
-
-<div class="section">
   <h2>Week-to-date totals</h2>
   <p class="sub" style="margin-top:4px;">Work entries only add to work-tier model totals. Casual entries only add to casual-tier model totals.</p>
   <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Model</th><th>Platform</th><th>Type</th><th>Tokens (in/out)</th><th>Total (USD)</th><th>Total (₹)</th></tr>
+      <tr><th>Model</th><th>Platform</th><th>Type</th><th>Rate ($/1M in/out)</th><th>Tokens (in/out)</th><th>Total (USD)</th><th>Total (₹)</th></tr>
     </thead>
     <tbody id="totalRows"></tbody>
   </table>
@@ -144,17 +160,20 @@
 const USD_INR = 88; // approx conversion, adjust if needed
 const STORAGE_KEY = "tokenCostLog";
 
+// Rates verified live Aug 2026 — Groq via console.groq.com/docs/models,
+// OpenRouter via openrouter.ai model pages, ChatboxAI via chatboxai.app/en/model-pricing
 const models = [
-  { name: "GPT-OSS 120B",      platform: "Groq",       in: 0.15,  out: 0.60,  type: "work" },
-  { name: "GPT-OSS 20B",       platform: "Groq",       in: 0.075, out: 0.30,  type: "casual" },
+  { name: "GPT-OSS 120B",      platform: "Groq",       in: 0.15,   out: 0.60,   type: "work" },
+  { name: "GPT-OSS 20B",       platform: "Groq",       in: 0.075,  out: 0.30,   type: "casual" },
 
-  { name: "Claude Sonnet 4.6", platform: "OpenRouter", in: 3.00, out: 15.00, type: "work" },
-  { name: "DeepSeek V3.2",     platform: "OpenRouter", in: 0.28, out: 0.42,  type: "work" },
-  { name: "Gemini 3 Flash",    platform: "OpenRouter", in: 0.50, out: 3.00,  type: "casual" },
+  { name: "Claude Sonnet 5",   platform: "OpenRouter", in: 2.00,   out: 10.00,  type: "work" },
+  { name: "DeepSeek V4 Pro",   platform: "OpenRouter", in: 0.3969, out: 0.7938, type: "work" },
+  { name: "DeepSeek V4 Flash", platform: "OpenRouter", in: 0.065,  out: 0.18,   type: "casual" },
+  { name: "Gemini 3.1 Flash Lite", platform: "OpenRouter", in: 0.25, out: 1.50, type: "casual" },
 
-  { name: "Claude Sonnet 5",   platform: "ChatboxAI",  in: 2.00, out: 10.00, type: "work" },
-  { name: "GPT 5.6 Luna",      platform: "ChatboxAI",  in: 0.20, out: 1.20,  type: "work" },
-  { name: "Chatbox AI 3.5",    platform: "ChatboxAI",  in: 0.30, out: 1.20,  type: "casual" },
+  { name: "Claude Sonnet 5",   platform: "ChatboxAI",  in: 2.00,   out: 10.00,  type: "work" },
+  { name: "GPT 5.6 Luna",      platform: "ChatboxAI",  in: 0.20,   out: 1.20,   type: "work" },
+  { name: "Chatbox AI 3.5",    platform: "ChatboxAI",  in: 0.30,   out: 1.20,   type: "casual" },
 ];
 
 let currentType = "work";
@@ -177,36 +196,9 @@ function saveLog(log){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
 }
 
-function renderCurrent(){
-  const inTokens = estimateTokens(document.getElementById('inp').value);
-  const outTokens = estimateTokens(document.getElementById('out').value);
-  document.getElementById('inTok').textContent = inTokens.toLocaleString();
-  document.getElementById('outTok').textContent = outTokens.toLocaleString();
-
-  const costs = models.map(m => {
-    const usd = (inTokens/1e6)*m.in + (outTokens/1e6)*m.out;
-    return { ...m, usd };
-  });
-  const minUsd = Math.min(...costs.map(c => c.usd));
-
-  document.getElementById('rows').innerHTML = costs
-    .sort((a,b) => a.usd - b.usd)
-    .map(c => `
-      <tr class="${c.type}">
-        <td>${c.name}</td>
-        <td class="platform">${c.platform}</td>
-        <td class="rate">$${c.in.toFixed(2)} / $${c.out.toFixed(2)}</td>
-        <td class="cost ${c.usd === minUsd ? 'cheapest' : ''}">$${c.usd.toFixed(4)}</td>
-        <td class="cost ${c.usd === minUsd ? 'cheapest' : ''}">₹${(c.usd*USD_INR).toFixed(2)}</td>
-      </tr>
-    `).join('');
-}
-
-function renderTotals(){
+function computeTotals(){
   const log = loadLog();
-  document.getElementById('entryCount').textContent = `${log.length} entr${log.length===1?'y':'ies'} logged`;
-
-  const totals = models.map(m => {
+  return models.map(m => {
     let inSum = 0, outSum = 0;
     log.forEach(e => {
       if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; }
@@ -214,6 +206,27 @@ function renderTotals(){
     const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
     return { ...m, inSum, outSum, usd };
   });
+}
+
+function renderSummary(totals){
+  const work = totals.filter(t => t.type === 'work').sort((a,b)=>a.usd-b.usd)[0];
+  const casual = totals.filter(t => t.type === 'casual').sort((a,b)=>a.usd-b.usd)[0];
+
+  document.getElementById('workCheapestName').textContent = `${work.name} · ${work.platform}`;
+  document.getElementById('workCheapestUsd').textContent = `$${work.usd.toFixed(4)}`;
+  document.getElementById('workCheapestInr').textContent = `₹${(work.usd*USD_INR).toFixed(2)}`;
+
+  document.getElementById('casualCheapestName').textContent = `${casual.name} · ${casual.platform}`;
+  document.getElementById('casualCheapestUsd').textContent = `$${casual.usd.toFixed(4)}`;
+  document.getElementById('casualCheapestInr').textContent = `₹${(casual.usd*USD_INR).toFixed(2)}`;
+}
+
+function renderTotals(){
+  const log = loadLog();
+  document.getElementById('entryCount').textContent = `${log.length} entr${log.length===1?'y':'ies'} logged`;
+
+  const totals = computeTotals();
+  renderSummary(totals);
 
   document.getElementById('totalRows').innerHTML = totals
     .sort((a,b)=> a.type === b.type ? a.usd - b.usd : (a.type==='work' ? -1 : 1))
@@ -222,11 +235,19 @@ function renderTotals(){
         <td>${t.name}</td>
         <td class="platform">${t.platform}</td>
         <td class="platform">${t.type}</td>
+        <td class="rate">$${t.in.toFixed(3)} / $${t.out.toFixed(3)}</td>
         <td class="rate">${t.inSum.toLocaleString()} / ${t.outSum.toLocaleString()}</td>
         <td class="cost">$${t.usd.toFixed(4)}</td>
         <td class="cost">₹${(t.usd*USD_INR).toFixed(2)}</td>
       </tr>
     `).join('');
+}
+
+function renderInputStats(){
+  const inTokens = estimateTokens(document.getElementById('inp').value);
+  const outTokens = estimateTokens(document.getElementById('out').value);
+  document.getElementById('inTok').textContent = inTokens.toLocaleString();
+  document.getElementById('outTok').textContent = outTokens.toLocaleString();
 }
 
 function addEntry(){
@@ -245,7 +266,7 @@ function addEntry(){
 
   document.getElementById('inp').value = "";
   document.getElementById('out').value = "";
-  renderCurrent();
+  renderInputStats();
   renderTotals();
 }
 
@@ -264,12 +285,12 @@ function downloadCSV(){
 
   rows.push([]);
   rows.push(["--- model totals ---"]);
-  rows.push(["model","platform","type","input_tokens","output_tokens","cost_usd","cost_inr"]);
+  rows.push(["model","platform","type","rate_in","rate_out","input_tokens","output_tokens","cost_usd","cost_inr"]);
   models.forEach(m => {
     let inSum = 0, outSum = 0;
     log.forEach(e => { if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; } });
     const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
-    rows.push([m.name, m.platform, m.type, inSum, outSum, usd.toFixed(4), (usd*USD_INR).toFixed(2)]);
+    rows.push([m.name, m.platform, m.type, m.in, m.out, inSum, outSum, usd.toFixed(4), (usd*USD_INR).toFixed(2)]);
   });
 
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
@@ -283,9 +304,9 @@ function downloadCSV(){
   URL.revokeObjectURL(url);
 }
 
-document.getElementById('inp').addEventListener('input', renderCurrent);
-document.getElementById('out').addEventListener('input', renderCurrent);
-renderCurrent();
+document.getElementById('inp').addEventListener('input', renderInputStats);
+document.getElementById('out').addEventListener('input', renderInputStats);
+renderInputStats();
 renderTotals();
 </script>
 
