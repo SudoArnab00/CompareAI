@@ -160,16 +160,14 @@
 const USD_INR = 88; // approx conversion, adjust if needed
 const STORAGE_KEY = "tokenCostLog";
 
-// Rates verified live Aug 2026 — Groq via console.groq.com/docs/models,
-// OpenRouter via openrouter.ai model pages, ChatboxAI via chatboxai.app/en/model-pricing
+// Rates verified live Aug 2026 — OpenRouter via openrouter.ai model pages, ChatboxAI via chatboxai.app/en/model-pricing.
+// Groq dropped: no competitive models left in its catalog. GPT-OSS models moved to OpenRouter — cheaper there than direct Groq.
+// No model repeated across platforms.
 const models = [
-  { name: "GPT-OSS 120B",      platform: "Groq",       in: 0.15,   out: 0.60,   type: "work" },
-  { name: "GPT-OSS 20B",       platform: "Groq",       in: 0.075,  out: 0.30,   type: "casual" },
-
-  { name: "Claude Sonnet 5",   platform: "OpenRouter", in: 2.00,   out: 10.00,  type: "work" },
   { name: "DeepSeek V4 Pro",   platform: "OpenRouter", in: 0.3969, out: 0.7938, type: "work" },
+  { name: "GPT-OSS 120B",      platform: "OpenRouter", in: 0.03,   out: 0.17,   type: "work" },
   { name: "DeepSeek V4 Flash", platform: "OpenRouter", in: 0.065,  out: 0.18,   type: "casual" },
-  { name: "Gemini 3.1 Flash Lite", platform: "OpenRouter", in: 0.25, out: 1.50, type: "casual" },
+  { name: "GPT-OSS 20B",       platform: "OpenRouter", in: 0.03,   out: 0.13,   type: "casual" },
 
   { name: "Claude Sonnet 5",   platform: "ChatboxAI",  in: 2.00,   out: 10.00,  type: "work" },
   { name: "GPT 5.6 Luna",      platform: "ChatboxAI",  in: 0.20,   out: 1.20,   type: "work" },
