@@ -23,7 +23,7 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     Digital Defender Cost Tracker
                 </h1>
                 <p class="text-sm text-gray-500 mt-1">OpenRouter estimation & logging (INR = 84) • Light Edition</p>
@@ -43,7 +43,7 @@
                         <!-- Model Selection -->
                         <div class="space-y-2">
                             <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Model</label>
-                            <select id="model-select" class="w-full bg-white border border-gray-300 rounded p-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono">
+                            <select id="model-select" class="w-full bg-white border border-gray-300 rounded p-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                 <optgroup label="Work (Reasoning/High-end)">
                                     <option value="DeepSeek V4 Pro">DeepSeek V4 Pro ($0.40 / $0.80)</option>
                                     <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet ($3.00 / $15.00)</option>
@@ -65,11 +65,11 @@
                         <div class="space-y-2">
                             <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Content Type Density</label>
                             <div class="flex gap-2">
-                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400 has-[:checked]:text-blue-700 transition-colors">
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
                                     <input type="radio" name="content-type" value="4.0" checked class="hidden">
                                     <span class="text-xs font-medium text-center">Prose<br>(~4 chars/token)</span>
                                 </label>
-                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-purple-50 has-[:checked]:border-purple-400 has-[:checked]:text-purple-700 transition-colors">
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-purple-50 has-[:checked]:border-purple-300">
                                     <input type="radio" name="content-type" value="2.8" class="hidden">
                                     <span class="text-xs font-medium text-center">Code/JSON/Logs<br>(~2.8 chars/token)</span>
                                 </label>
@@ -79,7 +79,10 @@
 
                     <!-- Modifiers -->
                     <div class="flex flex-wrap gap-6 pt-3 border-t border-gray-100">
-                        
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                            <input type="checkbox" id="mod-fee" class="rounded bg-white border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            Add 5.5% OpenRouter Fee
+                        </label>
                         <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                             <input type="checkbox" id="mod-context" class="rounded bg-white border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
                             Multi-turn context (x1.3 Input Tokens)
@@ -91,12 +94,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1">Input Prompt</label>
-                        <textarea id="input-text" rows="8" placeholder="Paste your prompt, text, or logs here..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"></textarea>
+                        <textarea id="input-text" rows="8" placeholder="Paste your prompt, text, or logs here..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"></textarea>
                     </div>
                     
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1">Output Response</label>
-                        <textarea id="output-text" rows="8" placeholder="Paste actual or estimated response..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"></textarea>
+                        <textarea id="output-text" rows="8" placeholder="Paste actual or estimated response..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"></textarea>
                     </div>
                 </div>
 
