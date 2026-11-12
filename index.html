@@ -1,312 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Token Cost Dashboard</title>
-<style>
-  :root{
-    --bg:#f7f7f5; --card:#ffffff; --border:#e2e2df; --text:#1a1a1a;
-    --muted:#6b6b68; --accent:#2f6f4f;
-    --work-bg:#eaf1fb; --work-border:#b9cfee;
-    --casual-bg:#fdf3e7; --casual-border:#eecfa0;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html{-webkit-text-size-adjust:100%;}
-  body{
-    background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-    margin:0; padding:16px; max-width:960px; margin-inline:auto;
-    padding-bottom:calc(24px + env(safe-area-inset-bottom));
-  }
-  h1{font-size:17px; margin:0 0 4px;}
-  h2{font-size:14px; margin:0 0 4px;}
-  p.sub{color:var(--muted); font-size:12.5px; margin:0 0 18px;}
-
-  .summary{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
-  .summary-card{
-    flex:1; min-width:150px; border-radius:10px; padding:14px; border:1px solid;
-  }
-  .summary-card.work{background:var(--work-bg); border-color:var(--work-border);}
-  .summary-card.casual{background:var(--casual-bg); border-color:var(--casual-border);}
-  .summary-label{font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700; margin-bottom:4px;}
-  .summary-model{font-size:12px; color:var(--muted); margin-bottom:6px;}
-  .summary-cost{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
-  .summary-cost-inr{font-size:13px; color:var(--muted); margin-top:2px;}
-
-  textarea{
-    width:100%; min-height:100px; padding:10px; border:1px solid var(--border);
-    border-radius:8px; font-size:16px; font-family:inherit; resize:vertical; background:var(--card);
-  }
-  label{font-size:12px; color:var(--muted); display:block; margin:14px 0 4px; font-weight:600;}
-  .stats{display:flex; gap:16px; margin-top:10px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
-  .stats b{color:var(--text);}
-
-  .toggle-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
-  .toggle-btn{
-    flex:1; min-width:110px; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
-    background:var(--card); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;
-  }
-  .toggle-btn.active.work{background:var(--work-bg); border-color:var(--work-border); color:var(--text);}
-  .toggle-btn.active.casual{background:var(--casual-bg); border-color:var(--casual-border); color:var(--text);}
-  .add-btn{
-    padding:10px 16px; border-radius:8px; border:none; background:var(--accent); color:#fff;
-    font-size:13px; font-weight:600; cursor:pointer;
-  }
-  .add-btn:active{opacity:.85;}
-
-  .table-wrap{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:16px; border:1px solid var(--border); border-radius:8px;}
-  table{width:100%; min-width:560px; border-collapse:collapse; font-size:13px;}
-  th,td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap;}
-  th{color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; background:var(--card); position:sticky; top:0;}
-  td.cost{font-variant-numeric:tabular-nums; font-weight:600;}
-  .cheapest{color:var(--accent);}
-  .platform{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;}
-  .rate{color:var(--muted); font-size:11px;}
-
-  tr.work{ background:var(--work-bg); }
-  tr.casual{ background:var(--casual-bg); }
-  tr.work td:first-child{ border-left:3px solid var(--work-border); }
-  tr.casual td:first-child{ border-left:3px solid var(--casual-border); }
-
-  .section{margin-top:28px; padding-top:16px; border-top:1px solid var(--border);}
-  .log-controls{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
-  .log-controls button{
-    padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card);
-    font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer;
-  }
-  .log-controls button.danger{color:#a33; border-color:#e6bcbc;}
-  .entry-count{font-size:12px; color:var(--muted); margin-top:8px;}
-
-  .legend{
-    display:flex; gap:18px; flex-wrap:wrap; margin-top:24px; padding-top:14px;
-    border-top:1px solid var(--border); font-size:12px; color:var(--muted);
-  }
-  .legend-item{display:flex; align-items:center; gap:7px;}
-  .swatch{width:14px; height:14px; border-radius:3px; display:inline-block; flex-shrink:0;}
-  .swatch.work{background:var(--work-bg); border:1px solid var(--work-border);}
-  .swatch.casual{background:var(--casual-bg); border:1px solid var(--casual-border);}
-
-  @media (max-width:480px){
-    body{padding:12px;}
-    h1{font-size:16px;}
-    th,td{padding:8px 8px; font-size:12px;}
-    .stats{gap:10px; font-size:12px;}
-    .toggle-btn{min-width:90px;}
-    .summary-cost{font-size:19px;}
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Defender - Cost Tracker (Light)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Light theme custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        
+        textarea { resize: vertical; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen p-4 md:p-8">
 
-<h1>Token Cost Dashboard</h1>
-<p class="sub">Paste a prompt, tag it work or casual, add it to the log. Totals accumulate all week — export CSV anytime.</p>
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Digital Defender Cost Tracker
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">OpenRouter estimation & logging (INR = 84) • Light Edition</p>
+            </div>
+        </header>
 
-<div class="summary">
-  <div class="summary-card work">
-    <div class="summary-label">Work — cheapest so far</div>
-    <div class="summary-model" id="workCheapestName">—</div>
-    <div class="summary-cost" id="workCheapestUsd">$0.0000</div>
-    <div class="summary-cost-inr" id="workCheapestInr">₹0.00</div>
-  </div>
-  <div class="summary-card casual">
-    <div class="summary-label">Casual — cheapest so far</div>
-    <div class="summary-model" id="casualCheapestName">—</div>
-    <div class="summary-cost" id="casualCheapestUsd">$0.0000</div>
-    <div class="summary-cost-inr" id="casualCheapestInr">₹0.00</div>
-  </div>
-</div>
+        <!-- Main Workspace -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Inputs & Controls -->
+            <div class="lg:col-span-8 space-y-4">
+                
+                <!-- Controls Card -->
+                <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-4 space-y-4">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Model Selection -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Model</label>
+                            <select id="model-select" class="w-full bg-white border border-gray-300 rounded p-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono">
+                                <optgroup label="Work (Reasoning/High-end)">
+                                    <option value="DeepSeek V4 Pro">DeepSeek V4 Pro ($0.40 / $0.80)</option>
+                                    <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet ($3.00 / $15.00)</option>
+                                    <option value="GPT-4o">GPT-4o ($2.50 / $10.00)</option>
+                                    <option value="Llama 3.1 405B">Llama 3.1 405B ($3.00 / $3.00)</option>
+                                    <option value="Qwen 2.5 72B">Qwen 2.5 72B ($0.35 / $0.40)</option>
+                                </optgroup>
+                                <optgroup label="Casual (Fast/Low-cost)">
+                                    <option value="DeepSeek V4 Flash">DeepSeek V4 Flash ($0.07 / $0.14)</option>
+                                    <option value="GPT-4o-mini">GPT-4o-mini ($0.15 / $0.60)</option>
+                                    <option value="Claude 3.5 Haiku">Claude 3.5 Haiku ($0.25 / $1.25)</option>
+                                    <option value="Llama 3.1 8B">Llama 3.1 8B ($0.05 / $0.05)</option>
+                                    <option value="Gemini 1.5 Flash">Gemini 1.5 Flash ($0.075 / $0.30)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <!-- Content Type Selection -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Content Type Density</label>
+                            <div class="flex gap-2">
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400 has-[:checked]:text-blue-700 transition-colors">
+                                    <input type="radio" name="content-type" value="4.0" checked class="hidden">
+                                    <span class="text-xs font-medium text-center">Prose<br>(~4 chars/token)</span>
+                                </label>
+                                <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer bg-white border border-gray-300 rounded p-2 hover:bg-gray-50 has-[:checked]:bg-purple-50 has-[:checked]:border-purple-400 has-[:checked]:text-purple-700 transition-colors">
+                                    <input type="radio" name="content-type" value="2.8" class="hidden">
+                                    <span class="text-xs font-medium text-center">Code/JSON/Logs<br>(~2.8 chars/token)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-<label for="inp">Input</label>
-<textarea id="inp" placeholder="Paste your prompt(s) here..."></textarea>
+                    <!-- Modifiers -->
+                    <div class="flex flex-wrap gap-6 pt-3 border-t border-gray-100">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                            <input type="checkbox" id="mod-fee" class="rounded bg-white border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            Add 5.5% OpenRouter Fee
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                            <input type="checkbox" id="mod-context" class="rounded bg-white border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            Multi-turn context (x1.3 Input Tokens)
+                        </label>
+                    </div>
+                </div>
 
-<label for="out">Output</label>
-<textarea id="out" placeholder="Paste the model's response here..."></textarea>
+                <!-- Text Areas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1">Input Prompt</label>
+                        <textarea id="input-text" rows="8" placeholder="Paste your prompt, text, or logs here..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"></textarea>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1">Output Response</label>
+                        <textarea id="output-text" rows="8" placeholder="Paste actual or estimated response..." class="w-full bg-white border border-gray-300 shadow-sm rounded-lg p-3 text-sm font-mono text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"></textarea>
+                    </div>
+                </div>
 
-<div class="stats">
-  <span>Input tokens: <b id="inTok">0</b></span>
-  <span>Output tokens: <b id="outTok">0</b></span>
-</div>
+            </div>
 
-<div class="toggle-row">
-  <button class="toggle-btn active work" id="btnWork" onclick="setType('work')">Work</button>
-  <button class="toggle-btn casual" id="btnCasual" onclick="setType('casual')">Casual</button>
-  <button class="add-btn" onclick="addEntry()">Add to log</button>
-</div>
+            <!-- Right Column: Live Stats & Actions -->
+            <div class="lg:col-span-4 space-y-4">
+                
+                <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-5 sticky top-6">
+                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Estimated Cost</h2>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                            <span class="text-sm text-gray-600 font-medium">Input Tokens</span>
+                            <span id="res-in-tokens" class="font-mono text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                            <span class="text-sm text-gray-600 font-medium">Output Tokens</span>
+                            <span id="res-out-tokens" class="font-mono text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2">
+                            <span class="text-sm text-gray-600 font-bold">Total Cost (USD)</span>
+                            <span id="res-usd" class="font-mono text-lg font-bold text-blue-700">$0.000000</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 border-t border-gray-100">
+                            <span class="text-sm text-gray-600 font-bold">Total Cost (INR)</span>
+                            <span id="res-inr" class="font-mono text-lg font-bold text-green-700">₹0.00</span>
+                        </div>
+                    </div>
 
-<div class="section">
-  <h2>Week-to-date totals</h2>
-  <p class="sub" style="margin-top:4px;">Work entries only add to work-tier model totals. Casual entries only add to casual-tier model totals.</p>
-  <div class="table-wrap">
-  <table>
-    <thead>
-      <tr><th>Model</th><th>Platform</th><th>Type</th><th>Rate ($/1M in/out)</th><th>Tokens (in/out)</th><th>Total (USD)</th><th>Total (₹)</th></tr>
-    </thead>
-    <tbody id="totalRows"></tbody>
-  </table>
-  </div>
-  <div class="entry-count" id="entryCount">0 entries logged</div>
-  <div class="log-controls">
-    <button onclick="downloadCSV()">Download CSV</button>
-    <button class="danger" onclick="clearLog()">Clear log</button>
-  </div>
-</div>
+                    <div class="space-y-2">
+                        <button id="btn-calculate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded shadow transition-colors">
+                            Calculate
+                        </button>
+                        <button id="btn-add-log" class="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-medium py-2.5 rounded shadow-sm transition-colors flex justify-center items-center gap-2">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Add to Log
+                        </button>
+                    </div>
+                </div>
 
-<div class="legend">
-  <div class="legend-item"><span class="swatch work"></span> Work — DFIR / IR reasoning, judgment-heavy tasks</div>
-  <div class="legend-item"><span class="swatch casual"></span> Casual — general prompting, low-stakes, high-volume</div>
-</div>
+            </div>
+        </main>
 
-<script>
-const USD_INR = 88; // approx conversion, adjust if needed
-const STORAGE_KEY = "tokenCostLog";
+        <!-- Dashboard / Log Table -->
+        <section class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden mt-8">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Usage Dashboard</h2>
+                <div class="flex gap-2">
+                    <button id="btn-export" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 rounded border border-gray-300 shadow-sm transition-colors">Export CSV</button>
+                    <button id="btn-clear" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-white hover:bg-red-50 rounded border border-gray-300 shadow-sm transition-colors">Clear Log</button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-xs font-bold text-gray-600 bg-white uppercase">
+                            <th class="p-3">Date</th>
+                            <th class="p-3">Model</th>
+                            <th class="p-3">Content Type</th>
+                            <th class="p-3">Tokens (In/Out)</th>
+                            <th class="p-3">Cost (USD)</th>
+                            <th class="p-3">Cost (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body" class="text-sm text-gray-800 font-mono divide-y divide-gray-100">
+                        <!-- Rows dynamically populated -->
+                    </tbody>
+                    <tfoot class="border-t-2 border-gray-200 bg-gray-50 text-gray-900 font-bold text-sm font-mono">
+                        <tr>
+                            <td colspan="3" class="p-3 text-right">Grand Total:</td>
+                            <td id="total-tokens-tfoot" class="p-3">0 / 0</td>
+                            <td id="total-usd-tfoot" class="p-3 text-blue-700">$0.000000</td>
+                            <td id="total-inr-tfoot" class="p-3 text-green-700">₹0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
 
-// Rates verified live Aug 2026 — OpenRouter via openrouter.ai model pages, ChatboxAI via chatboxai.app/en/model-pricing.
-// Groq dropped: no competitive models left in its catalog. GPT-OSS models moved to OpenRouter — cheaper there than direct Groq.
-// No model repeated across platforms.
-const models = [
-  { name: "DeepSeek V4 Pro",   platform: "OpenRouter", in: 0.3969, out: 0.7938, type: "work" },
-  { name: "GPT-OSS 120B",      platform: "OpenRouter", in: 0.03,   out: 0.17,   type: "work" },
-  { name: "DeepSeek V4 Flash", platform: "OpenRouter", in: 0.065,  out: 0.18,   type: "casual" },
-  { name: "GPT-OSS 20B",       platform: "OpenRouter", in: 0.03,   out: 0.13,   type: "casual" },
+    </div>
 
-  { name: "Claude Sonnet 5",   platform: "ChatboxAI",  in: 2.00,   out: 10.00,  type: "work" },
-  { name: "GPT 5.6 Luna",      platform: "ChatboxAI",  in: 0.20,   out: 1.20,   type: "work" },
-  { name: "Chatbox AI 3.5",    platform: "ChatboxAI",  in: 0.30,   out: 1.20,   type: "casual" },
-];
+    <script>
+        // Data & Config
+        const INR_RATE = 84;
+        
+        // Exact 10 Hardcoded Models with Prices per 1M tokens
+        const MODEL_RATES = {
+            // Work
+            "DeepSeek V4 Pro": { in: 0.40, out: 0.80 },
+            "Claude 3.5 Sonnet": { in: 3.00, out: 15.00 },
+            "GPT-4o": { in: 2.50, out: 10.00 },
+            "Llama 3.1 405B": { in: 3.00, out: 3.00 },
+            "Qwen 2.5 72B": { in: 0.35, out: 0.40 },
+            // Casual
+            "DeepSeek V4 Flash": { in: 0.07, out: 0.14 },
+            "GPT-4o-mini": { in: 0.15, out: 0.60 },
+            "Claude 3.5 Haiku": { in: 0.25, out: 1.25 },
+            "Llama 3.1 8B": { in: 0.05, out: 0.05 },
+            "Gemini 1.5 Flash": { in: 0.075, out: 0.30 }
+        };
 
-let currentType = "work";
+        // State
+        let logs = JSON.parse(localStorage.getItem('ddTrackerLightLogs') || '[]');
+        let currentCalc = { inTokens: 0, outTokens: 0, usd: 0, inr: 0, modelName: '', contentType: '' };
 
-function estimateTokens(text){
-  return Math.ceil(text.trim().length / 4);
-}
+        // DOM Elements
+        const elSelect = document.getElementById('model-select');
+        const elInput = document.getElementById('input-text');
+        const elOutput = document.getElementById('output-text');
+        const elModFee = document.getElementById('mod-fee');
+        const elModContext = document.getElementById('mod-context');
+        const elContentTypes = document.getElementsByName('content-type');
+        
+        const elResIn = document.getElementById('res-in-tokens');
+        const elResOut = document.getElementById('res-out-tokens');
+        const elResUsd = document.getElementById('res-usd');
+        const elResInr = document.getElementById('res-inr');
+        
+        const elTableBody = document.getElementById('log-table-body');
+        
+        // Core Calculation Engine
+        function calculate() {
+            const modelName = elSelect.value;
+            const rates = MODEL_RATES[modelName];
+            
+            // Get content density multiplier
+            const charsPerToken = parseFloat(Array.from(elContentTypes).find(r => r.checked).value);
+            const contentTypeLabel = charsPerToken === 4.0 ? 'Prose' : 'Code/Logs';
+            
+            // Estimate raw tokens
+            const inTextLen = elInput.value.length;
+            const outTextLen = elOutput.value.length;
+            
+            let inTokens = inTextLen > 0 ? Math.ceil(inTextLen / charsPerToken) : 0;
+            let outTokens = outTextLen > 0 ? Math.ceil(outTextLen / charsPerToken) : 0;
+            
+            // Apply Multi-turn Modifier
+            if (elModContext.checked) {
+                inTokens = Math.ceil(inTokens * 1.3);
+            }
+            
+            // Cost calculation
+            let usdCost = 0;
+            if (rates) {
+                usdCost = (inTokens / 1000000 * rates.in) + (outTokens / 1000000 * rates.out);
+            }
 
-function setType(t){
-  currentType = t;
-  document.getElementById('btnWork').classList.toggle('active', t==='work');
-  document.getElementById('btnCasual').classList.toggle('active', t==='casual');
-}
+            // Apply Fee Modifier
+            if (elModFee.checked) {
+                usdCost = usdCost * 1.055;
+            }
 
-function loadLog(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch(e){ return []; }
-}
-function saveLog(log){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
-}
+            const inrCost = usdCost * INR_RATE;
 
-function computeTotals(){
-  const log = loadLog();
-  return models.map(m => {
-    let inSum = 0, outSum = 0;
-    log.forEach(e => {
-      if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; }
-    });
-    const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
-    return { ...m, inSum, outSum, usd };
-  });
-}
+            // Update State for logging
+            currentCalc = {
+                inTokens,
+                outTokens,
+                usd: usdCost,
+                inr: inrCost,
+                modelName: modelName,
+                contentType: contentTypeLabel
+            };
 
-function renderSummary(totals){
-  const work = totals.filter(t => t.type === 'work').sort((a,b)=>a.usd-b.usd)[0];
-  const casual = totals.filter(t => t.type === 'casual').sort((a,b)=>a.usd-b.usd)[0];
+            // Update UI
+            elResIn.textContent = inTokens.toLocaleString();
+            elResOut.textContent = outTokens.toLocaleString();
+            elResUsd.textContent = `$${usdCost.toFixed(6)}`;
+            elResInr.textContent = `₹${inrCost.toFixed(2)}`;
+        }
 
-  document.getElementById('workCheapestName').textContent = `${work.name} · ${work.platform}`;
-  document.getElementById('workCheapestUsd').textContent = `$${work.usd.toFixed(4)}`;
-  document.getElementById('workCheapestInr').textContent = `₹${(work.usd*USD_INR).toFixed(2)}`;
+        // Logging Functions
+        function addLog() {
+            calculate(); // Ensure latest state before logging
 
-  document.getElementById('casualCheapestName').textContent = `${casual.name} · ${casual.platform}`;
-  document.getElementById('casualCheapestUsd').textContent = `$${casual.usd.toFixed(4)}`;
-  document.getElementById('casualCheapestInr').textContent = `₹${(casual.usd*USD_INR).toFixed(2)}`;
-}
+            if (currentCalc.inTokens === 0 && currentCalc.outTokens === 0) {
+                alert("Please paste some text into the Input or Output fields before logging.");
+                return;
+            }
 
-function renderTotals(){
-  const log = loadLog();
-  document.getElementById('entryCount').textContent = `${log.length} entr${log.length===1?'y':'ies'} logged`;
+            const entry = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                model: currentCalc.modelName,
+                contentType: currentCalc.contentType,
+                inTokens: currentCalc.inTokens,
+                outTokens: currentCalc.outTokens,
+                usd: currentCalc.usd,
+                inr: currentCalc.inr
+            };
 
-  const totals = computeTotals();
-  renderSummary(totals);
+            logs.push(entry);
+            localStorage.setItem('ddTrackerLightLogs', JSON.stringify(logs));
+            
+            renderLogs();
 
-  document.getElementById('totalRows').innerHTML = totals
-    .sort((a,b)=> a.type === b.type ? a.usd - b.usd : (a.type==='work' ? -1 : 1))
-    .map(t => `
-      <tr class="${t.type}">
-        <td>${t.name}</td>
-        <td class="platform">${t.platform}</td>
-        <td class="platform">${t.type}</td>
-        <td class="rate">$${t.in.toFixed(3)} / $${t.out.toFixed(3)}</td>
-        <td class="rate">${t.inSum.toLocaleString()} / ${t.outSum.toLocaleString()}</td>
-        <td class="cost">$${t.usd.toFixed(4)}</td>
-        <td class="cost">₹${(t.usd*USD_INR).toFixed(2)}</td>
-      </tr>
-    `).join('');
-}
+            // Visual feedback on button
+            const btn = document.getElementById('btn-add-log');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saved!';
+            btn.classList.add('bg-green-50', 'border-green-300', 'text-green-700');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-green-50', 'border-green-300', 'text-green-700');
+            }, 1500);
+        }
 
-function renderInputStats(){
-  const inTokens = estimateTokens(document.getElementById('inp').value);
-  const outTokens = estimateTokens(document.getElementById('out').value);
-  document.getElementById('inTok').textContent = inTokens.toLocaleString();
-  document.getElementById('outTok').textContent = outTokens.toLocaleString();
-}
+        function renderLogs() {
+            elTableBody.innerHTML = '';
+            
+            if (logs.length === 0) {
+                elTableBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 font-sans">No history logged yet.</td></tr>`;
+                document.getElementById('total-tokens-tfoot').textContent = '0 / 0';
+                document.getElementById('total-usd-tfoot').textContent = '$0.000000';
+                document.getElementById('total-inr-tfoot').textContent = '₹0.00';
+                return;
+            }
 
-function addEntry(){
-  const inTokens = estimateTokens(document.getElementById('inp').value);
-  const outTokens = estimateTokens(document.getElementById('out').value);
-  if (inTokens === 0 && outTokens === 0) return;
+            const sortedLogs = [...logs].reverse(); // newest first
+            let sumIn = 0, sumOut = 0, sumUsd = 0, sumInr = 0;
 
-  const log = loadLog();
-  log.push({
-    timestamp: new Date().toISOString(),
-    type: currentType,
-    inTokens,
-    outTokens
-  });
-  saveLog(log);
+            sortedLogs.forEach(log => {
+                sumIn += log.inTokens;
+                sumOut += log.outTokens;
+                sumUsd += log.usd;
+                sumInr += log.inr;
 
-  document.getElementById('inp').value = "";
-  document.getElementById('out').value = "";
-  renderInputStats();
-  renderTotals();
-}
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors';
+                
+                const d = new Date(log.date);
+                const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                const badgeColor = log.contentType === 'Prose' 
+                    ? 'bg-blue-100 text-blue-800 border-blue-200' 
+                    : 'bg-purple-100 text-purple-800 border-purple-200';
 
-function clearLog(){
-  if (!confirm("Clear the entire weekly log? This can't be undone.")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  renderTotals();
-}
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-500 text-xs">${dateStr}</td>
+                    <td class="p-3 font-semibold text-gray-700">${log.model}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-xs border ${badgeColor}">${log.contentType}</span>
+                    </td>
+                    <td class="p-3">${log.inTokens.toLocaleString()} / ${log.outTokens.toLocaleString()}</td>
+                    <td class="p-3 text-blue-600">$${log.usd.toFixed(6)}</td>
+                    <td class="p-3 text-green-600">₹${log.inr.toFixed(2)}</td>
+                `;
+                elTableBody.appendChild(tr);
+            });
 
-function downloadCSV(){
-  const log = loadLog();
-  if (log.length === 0){ alert("No entries logged yet."); return; }
+            document.getElementById('total-tokens-tfoot').textContent = `${sumIn.toLocaleString()} / ${sumOut.toLocaleString()}`;
+            document.getElementById('total-usd-tfoot').textContent = `$${sumUsd.toFixed(6)}`;
+            document.getElementById('total-inr-tfoot').textContent = `₹${sumInr.toFixed(2)}`;
+        }
 
-  let rows = [["timestamp","type","input_tokens","output_tokens"]];
-  log.forEach(e => rows.push([e.timestamp, e.type, e.inTokens, e.outTokens]));
+        function clearLogs() {
+            if(confirm('Are you sure you want to delete all saved calculations?')) {
+                logs = [];
+                localStorage.removeItem('ddTrackerLightLogs');
+                renderLogs();
+            }
+        }
 
-  rows.push([]);
-  rows.push(["--- model totals ---"]);
-  rows.push(["model","platform","type","rate_in","rate_out","input_tokens","output_tokens","cost_usd","cost_inr"]);
-  models.forEach(m => {
-    let inSum = 0, outSum = 0;
-    log.forEach(e => { if (e.type === m.type){ inSum += e.inTokens; outSum += e.outTokens; } });
-    const usd = (inSum/1e6)*m.in + (outSum/1e6)*m.out;
-    rows.push([m.name, m.platform, m.type, m.in, m.out, inSum, outSum, usd.toFixed(4), (usd*USD_INR).toFixed(2)]);
-  });
+        function exportCSV() {
+            if (logs.length === 0) return alert('No data to export.');
 
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const today = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = `token_cost_log_${today}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+            let csv = 'Date,Model,Content Type,Input Tokens,Output Tokens,Cost (USD),Cost (INR)\n';
+            logs.forEach(log => {
+                const date = new Date(log.date).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                const model = `"${log.model.replace(/"/g, '""')}"`;
+                csv += `${date},${model},${log.contentType},${log.inTokens},${log.outTokens},${log.usd.toFixed(6)},${log.inr.toFixed(2)}\n`;
+            });
 
-document.getElementById('inp').addEventListener('input', renderInputStats);
-document.getElementById('out').addEventListener('input', renderInputStats);
-renderInputStats();
-renderTotals();
-</script>
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `AI_Cost_Logs_Light_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
+        // Init and Listeners
+        window.onload = () => {
+            renderLogs();
+            
+            // Explicit button listener for Calculate
+            document.getElementById('btn-calculate').addEventListener('click', calculate);
+            
+            // Also add Add To Log button listener
+            document.getElementById('btn-add-log').addEventListener('click', addLog);
+            
+            // Dashboard listeners
+            document.getElementById('btn-clear').addEventListener('click', clearLogs);
+            document.getElementById('btn-export').addEventListener('click', exportCSV);
+
+            // Optional: Auto-calculate on input changes for immediate feedback
+            elInput.addEventListener('input', calculate);
+            elOutput.addEventListener('input', calculate);
+            elSelect.addEventListener('change', calculate);
+            elModFee.addEventListener('change', calculate);
+            elModContext.addEventListener('change', calculate);
+            Array.from(elContentTypes).forEach(r => r.addEventListener('change', calculate));
+        };
+
+    </script>
 </body>
 </html>
