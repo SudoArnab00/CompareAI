@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -45,18 +45,17 @@
                             <label class="text-xs font-bold text-gray-600 uppercase tracking-wider block">Model</label>
                             <select id="model-select" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono transition-colors">
                                 <optgroup label="Work (Reasoning/High-end)">
-                                    <option value="DeepSeek V4 Pro (OpenRouter)">DeepSeek V4 Pro (OR) - $0.10 / $8.00</option>
-                                    <option value="Claude Fable 5.2 (NearAI)">Claude Fable 5.2 (NearAI) - $8.00 / $40.00</option>
-                                    <option value="GPT-4.1 (NearAI)">GPT-4.1 (NearAI) - $2.00 / $8.00</option>
-                                    <option value="DeepSeek V4 Pro 0423 (OpenRouter)">DeepSeek V4 Pro 0423 (OR) - $0.894 / $1.788</option>
-                                    <option value="Claude Sonnet 5 (OpenRouter)">Claude Sonnet 5 (OR) - $2.00 / $10.00</option>
+                                    <option value="Claude Opus 5.5 (OpenRouter)">Claude Opus 5.5 (OR) - $4.00 / $20.00</option>
+                                    <option value="Claude Sonnet 5.5 (OpenRouter)">Claude Sonnet 5.5 (OR) - $2.00 / $10.00</option>
+                                    <option value="DeepSeek V4 Pro 0813 (OpenRouter)">DeepSeek V4 Pro 0813 (OR) - $1.12 / $3.37</option>
+                                    <option value="DeepSeek V3.1 (NearAI - Confidential)">DeepSeek V3.1 (NearAI TEE) - $1.00 / $2.50</option>
+                                    <option value="GLM-4.6 FP8 (NearAI - Confidential)">GLM-4.6 FP8 (NearAI TEE) - $0.75 / $2.00</option>
                                 </optgroup>
                                 <optgroup label="Casual (Fast/Low-cost)">
-                                    <option value="DeepSeek V4.1 Flash 1017 (NearAI)">DS V4.1 Flash 1017 (NearAI) - $0.30 / $1.20</option>
-                                    <option value="Claude Haiku 5.5 (NearAI)">Claude Haiku 5.5 (NearAI) - $0.10 / $0.50</option>
-                                    <option value="Qwen 3.8 27B (NearAI)">Qwen 3.8 27B (NearAI) - $0.04 / $1.35</option>
-                                    <option value="DeepSeek V4 Flash (OpenRouter)">DeepSeek V4 Flash (OR) - $0.065 / $0.180</option>
-                                    <option value="GPT-4.1 mini (NearAI)">GPT-4.1 mini (NearAI) - $0.40 / $1.60</option>
+                                    <option value="Claude Haiku 5.5 (OpenRouter)">Claude Haiku 5.5 (OR) - $0.10 / $0.50</option>
+                                    <option value="DeepSeek V4.1 Flash 1017 (OpenRouter)">DS V4.1 Flash 1017 (OR) - $0.15 / $0.60</option>
+                                    <option value="DeepSeek V3.2 (OpenRouter)">DeepSeek V3.2 (OR) - $0.27 / $0.41</option>
+                                    <option value="gpt-oss-120b (NearAI - Confidential)">gpt-oss-120b (NearAI TEE) - $0.20 / $0.60</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -175,17 +174,16 @@
         // Specific user-requested models
         const MODEL_RATES = {
             // Work
-            "DeepSeek V4 Pro (OpenRouter)": { in: 0.10, out: 8.00 },
-            "Claude Fable 5.2 (NearAI)": { in: 8.00, out: 40.00 },
-            "GPT-4.1 (NearAI)": { in: 2.00, out: 8.00 },
-            "DeepSeek V4 Pro 0423 (OpenRouter)": { in: 0.894, out: 1.788 },
-            "Claude Sonnet 5 (OpenRouter)": { in: 2.00, out: 10.00 },
+            "Claude Opus 5.5 (OpenRouter)": { in: 4.00, out: 20.00 },
+            "Claude Sonnet 5.5 (OpenRouter)": { in: 2.00, out: 10.00 },
+            "DeepSeek V4 Pro 0813 (OpenRouter)": { in: 1.12, out: 3.37 },
+            "DeepSeek V3.1 (NearAI - Confidential)": { in: 1.00, out: 2.50 },
+            "GLM-4.6 FP8 (NearAI - Confidential)": { in: 0.75, out: 2.00 },
             // Casual
-            "DeepSeek V4.1 Flash 1017 (NearAI)": { in: 0.30, out: 1.20 },
-            "Claude Haiku 5.5 (NearAI)": { in: 0.10, out: 0.50 },
-            "Qwen 3.8 27B (NearAI)": { in: 0.04, out: 1.35 },
-            "DeepSeek V4 Flash (OpenRouter)": { in: 0.065, out: 0.180 },
-            "GPT-4.1 mini (NearAI)": { in: 0.40, out: 1.60 }
+            "Claude Haiku 5.5 (OpenRouter)": { in: 0.10, out: 0.50 },
+            "DeepSeek V4.1 Flash 1017 (OpenRouter)": { in: 0.15, out: 0.60 },
+            "DeepSeek V3.2 (OpenRouter)": { in: 0.27, out: 0.41 },
+            "gpt-oss-120b (NearAI - Confidential)": { in: 0.20, out: 0.60 }
         };
 
         // State
